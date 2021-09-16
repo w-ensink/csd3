@@ -48,16 +48,16 @@ def get_transform_matrix():
 
 
 def main():
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     transform_matrix = get_transform_matrix()
 
     while cap.isOpened():
         ret, frame = cap.read()
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        width = 1920 #int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = 1200 #int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         dst = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
         matrix = cv2.getPerspectiveTransform(transform_matrix, dst)
-        frame = cv2.warpPerspective(frame, matrix, (width, height))
+        frame = cv2.warpPerspective(frame, matrix, (1920, 1200))
 
         cv2.imshow('frame', frame)
 
