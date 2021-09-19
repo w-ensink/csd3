@@ -1,7 +1,7 @@
+import sys
 import cv2
-import numpy as np
+import yaml
 
-cap = cv2.VideoCapture(0)
 draw_positions = []
 COLOR = (255, 0, 0)
 
@@ -27,36 +27,34 @@ def draw_lines(frame):
     return frame
 
 
-def write_transform_to_file():
-    with open('transform-matrix.txt', 'w') as f:
+def write_transform_to_file(file_path: str):
+    with open(file_path, 'w') as f:
         for x, y in draw_positions:
             f.writelines(f'{x},{y}\n')
 
 
+def parse_config(file_path: str):
+    with open(file_path, 'r') as file:
+        return yaml.full_load(file)
+
+
 def main():
+    config = parse_config(sys.argv[1])
+    cap = cv2.VideoCapture(config['camera'])
+
     while cap.isOpened():
         ret, frame = cap.read()
-        # Locate points of the documents or object which you want to transform
-        pts1 = np.float32([[0, 260], [640, 260], [0, 400], [640, 400]])
-        pts2 = np.float32([[0, 0], [400, 0], [0, 640], [400, 640]])
-
-        # Apply Perspective Transform Algorithm
-        matrix = cv2.getPerspectiveTransform(pts1, pts2)
-        result = cv2.warpPerspective(frame, matrix, (500, 600))
-        # Wrap the transformed image
-
         frame = draw_lines(frame)
 
-        cv2.imshow('frame', frame)  # Inital Capture
+        cv2.imshow('frame', frame)
         cv2.setMouseCallback('frame', mouse_callback)
-        # cv2.imshow('frame1', result)  # Transformed Capture
 
         if user_pressed_esc():
             break
 
     cap.release()
     cv2.destroyAllWindows()
-    write_transform_to_file()
+    write_transform_to_file(config['transform_data'])
 
 
 if __name__ == '__main__':

@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import unittest
+import sys
+import yaml
 
 
 def get_top_left(points: [(int, int)]) -> (int, int):
@@ -36,8 +38,8 @@ def user_pressed_esc() -> bool:
     return cv2.waitKey(24) == 27
 
 
-def get_transform_matrix():
-    with open('transform-matrix.txt', 'r') as f:
+def get_source_transform_points(file_path: str):
+    with open(file_path, 'r') as f:
         points = []
         for _ in range(4):
             line = f.readline()
@@ -47,18 +49,27 @@ def get_transform_matrix():
         return np.float32(points)
 
 
+def transform_frame(frame: np.ndarray, transform_points: [(int, int)], target_width: int, target_height: int):
+    dst = np.float32([[0, 0], [target_width, 0], [0, target_height], [target_width, target_height]])
+    matrix = cv2.getPerspectiveTransform(transform_points, dst)
+    return cv2.warpPerspective(frame, matrix, (target_width, target_height))
+
+
+def parse_config(file_path: str):
+    with open(file_path, 'r') as file:
+        return yaml.full_load(file)
+
+
 def main():
-    cap = cv2.VideoCapture(0)
-    transform_matrix = get_transform_matrix()
+    config = parse_config(sys.argv[1])
+    cap = cv2.VideoCapture(config['camera'])
+    transform_points = get_source_transform_points(config['transform_data'])
+    width = config['width']
+    height = config['height']
 
     while cap.isOpened():
         ret, frame = cap.read()
-        width = 1920 #int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = 1200 #int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        dst = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
-        matrix = cv2.getPerspectiveTransform(transform_matrix, dst)
-        frame = cv2.warpPerspective(frame, matrix, (1920, 1200))
-
+        frame = transform_frame(frame, transform_points, width, height)
         cv2.imshow('frame', frame)
 
         if user_pressed_esc():
@@ -67,8 +78,6 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
 
-
-# links boven, rechts boven, links onder, rechts onder
 
 class SortTest(unittest.TestCase):
     def test_sorting(self):
