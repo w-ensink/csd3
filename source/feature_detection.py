@@ -5,6 +5,7 @@ import cv2
 # - background subtraction
 # - background = black, moving object = white
 # - count black & white pixels to set percentage
+# - canny edge detection to detect edge coordinates in realtime
 
 cap = cv2.VideoCapture('../assets/WIN_20210918_10_58_50_Pro.mp4')
 background_subtraction = cv2.createBackgroundSubtractorKNN()
@@ -16,19 +17,25 @@ while 1:
     foreground_mask = background_subtraction.apply(frame)
     closing = cv2.morphologyEx(foreground_mask, cv2.MORPH_CLOSE, kernel)
 
-    cv2.imshow('frame', frame)
-    cv2.imshow('closing', closing)
-
     # moving object
     white_pixels = cv2.countNonZero(closing)
-    print("white pixels: ", white_pixels)
+    # print("white pixels: ", white_pixels)
 
     # background
     black_pixels = np.sum(closing == 0)
-    print("black pixels: ", black_pixels)
+    # print("black pixels: ", black_pixels)
 
     percentage_white_pixels = (white_pixels / black_pixels) * 100
-    print("percentage of white pixels: ", percentage_white_pixels, "\n")
+    # print("percentage of white pixels: ", percentage_white_pixels, "\n")
+
+    # canny edge detection, coordinates variable contains all x and y values of the edge points
+    edges = cv2.Canny(closing, 100, 150)
+    indices = np.where(edges != [0])
+    coordinates = list(zip(indices[0], indices[1]))
+    print(coordinates)
+
+    cv2.imshow('frame', frame)
+    cv2.imshow('canny', edges)
 
     k = cv2.waitKey(30) & 0xff
     if k == 27:
