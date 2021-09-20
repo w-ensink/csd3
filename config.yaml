@@ -1,0 +1,4 @@
+camera: 1
+width: 1920
+height: 1200
+transform_data: transform-points.txt
