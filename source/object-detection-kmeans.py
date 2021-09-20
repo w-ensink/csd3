@@ -19,9 +19,17 @@ cap = cv2.VideoCapture(2)
 vid = cv2.VideoCapture('../../_assets/WIN_20210918_10_58_50_Pro.mp4')
 
 
+def closing(image):
+    kernelSizes = [(3, 3), (5, 5), (7, 7)]
+
+    kn = cv2.getStructuringElement(cv2.MORPH_RECT, kernelSizes[2])
+    return cv2.morphologyEx(image, cv2.MORPH_OPEN, kn)
+
+
 def preprocess(image):
-    c = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
-    Z2 = cv2.findNonZero(image)
+    mod = closing(image)
+    c = cv2.cvtColor(mod, cv2.COLOR_RGB2RGBA)
+    Z2 = cv2.findNonZero(mod)
 
     if Z2 is not None:
         Z2 = np.squeeze(Z2, axis=1)
