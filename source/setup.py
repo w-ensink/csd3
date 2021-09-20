@@ -1,9 +1,11 @@
 import sys
 import cv2
 import yaml
+from contours import get_screen_contour, get_corners
 
-draw_positions = []
-COLOR = (255, 0, 0)
+screen_corners = []
+saved_screen_corners = []
+COLOR = (0, 255, 0)
 
 
 def user_pressed_esc() -> bool:
@@ -12,24 +14,21 @@ def user_pressed_esc() -> bool:
 
 def mouse_callback(event, x, y, flag, param):
     if event == cv2.EVENT_LBUTTONDOWN:
-        draw_positions.append((x, y))
-        print(f'x: {x}, y: {y}')
+        global saved_screen_corners
+        saved_screen_corners = screen_corners
 
 
-def draw_lines(frame):
-    if len(draw_positions) == 1:
-        frame = cv2.circle(frame, draw_positions[0], 1, COLOR, 2)
-
-    for i in range(len(draw_positions)):
-        if i + 1 < len(draw_positions):
-            frame = cv2.line(frame, draw_positions[i], draw_positions[i + 1], COLOR, 2)
-
+def draw_screen_outlines(frame, corners):
+    cv2.line(frame, corners[0], corners[1], COLOR, 2)
+    cv2.line(frame, corners[1], corners[2], COLOR, 2)
+    cv2.line(frame, corners[2], corners[3], COLOR, 2)
+    cv2.line(frame, corners[3], corners[0], COLOR, 2)
     return frame
 
 
 def write_transform_to_file(file_path: str):
     with open(file_path, 'w') as f:
-        for x, y in draw_positions:
+        for x, y in saved_screen_corners:
             f.writelines(f'{x},{y}\n')
 
 
@@ -44,7 +43,13 @@ def main():
 
     while cap.isOpened():
         ret, frame = cap.read()
-        frame = draw_lines(frame)
+        contour = get_screen_contour(frame)
+        if len(contour) > 0:
+            corners = get_corners(get_screen_contour(frame))
+            if len(corners) == 4:
+                global screen_corners
+                screen_corners = corners
+                frame = draw_screen_outlines(frame, corners)
 
         cv2.imshow('frame', frame)
         cv2.setMouseCallback('frame', mouse_callback)

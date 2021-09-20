@@ -4,10 +4,6 @@ import cv2
 import numpy as np
 
 
-def create_blank_image():
-    return np.ones(shape=(450, 600, 3), dtype=np.uint8)
-
-
 def get_screen_contour(image):
     # Convert the image to grayscale
     grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -16,7 +12,7 @@ def get_screen_contour(image):
     # Modify the threshold (e.g. 75 for tshirt.jpg) accordingly depending on how to output looks.
     # If you have a dark item on a light background, use cv2.THRESH_BINARY_INV and consider
     # changing the lower color threshold to 115.
-    threshold = cv2.threshold(src=grayscale_image, thresh=160, maxval=255, type=cv2.THRESH_BINARY)[1]
+    threshold = cv2.threshold(src=grayscale_image, thresh=100, maxval=255, type=cv2.THRESH_BINARY)[1]
 
     kernel = np.ones(shape=(5, 5), dtype=np.uint8)
 
@@ -26,8 +22,8 @@ def get_screen_contour(image):
     # Find the contours
     contours = cv2.findContours(image=threshold, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
-    blank_image = create_blank_image()
-    return sorted(contours, key=cv2.contourArea, reverse=True)[0]
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    return [] if len(contours) == 0 else contours[0]
 
 
 def get_corners(contour):
