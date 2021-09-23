@@ -45,7 +45,7 @@ def main():
         ret, frame = cap.read()
         contour = get_screen_contour(frame)
         if len(contour) > 0:
-            corners = get_corners(get_screen_contour(frame))
+            corners = get_corners(contour)
             if len(corners) == 4:
                 global screen_corners
                 screen_corners = corners
