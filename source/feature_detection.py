@@ -1,41 +1,37 @@
 import numpy as np
 import cv2
 
-# feature detection
-# - background subtraction
-# - background = black, moving object = white
-# - count black & white pixels to set percentage
-# - canny edge detection to detect edge coordinates in realtime
-
 cap = cv2.VideoCapture('../assets/WIN_20210918_10_58_50_Pro.mp4')
+img = cv2.imread('../assets/whitepixeltest.PNG')
 background_subtraction = cv2.createBackgroundSubtractorKNN()
 
 while 1:
     ret, frame = cap.read()
-    kernel = np.ones((5, 5), np.uint8)
 
-    foreground_mask = background_subtraction.apply(frame)
-    closing = cv2.morphologyEx(foreground_mask, cv2.MORPH_CLOSE, kernel)
+    grayscale_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # moving object
-    white_pixels = cv2.countNonZero(closing)
-    # print("white pixels: ", white_pixels)
+    threshold = cv2.threshold(src=grayscale_image, thresh=100, maxval=255, type=cv2.THRESH_BINARY_INV)[1]
 
-    # background
-    black_pixels = np.sum(closing == 0)
-    # print("black pixels: ", black_pixels)
+    kernel = np.ones(shape=(5, 5), dtype=np.uint8)
 
-    percentage_white_pixels = (white_pixels / black_pixels) * 100
-    # print("percentage of white pixels: ", percentage_white_pixels, "\n")
+    threshold = cv2.morphologyEx(src=threshold, op=cv2.MORPH_CLOSE, kernel=kernel)
 
-    # canny edge detection, coordinates variable contains all x and y values of the edge points
-    edges = cv2.Canny(closing, 100, 150)
-    indices = np.where(edges != [0])
-    coordinates = list(zip(indices[0], indices[1]))
-    print(coordinates)
+    contours = cv2.findContours(image=threshold, mode=cv2.RETR_CCOMP, method=cv2.CHAIN_APPROX_SIMPLE)
+    contours = contours[0] if len(contours) == 2 else contours[1]
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+    thresh_copy = cv2.cvtColor(threshold, cv2.COLOR_GRAY2RGB)
+
+    for contour in contours:
+        perimeter = cv2.arcLength(contour, True)
+        e = 0.005 * perimeter  # The bigger the fraction, the more sides are chopped off the original polygon
+        contour = cv2.approxPolyDP(contour, epsilon=e, closed=True)
+        cv2.drawContours(thresh_copy, [contour], contourIdx=-1, color=(0, 255, 0), thickness=2)
+        cv2.fillPoly(thresh_copy, [contour], (0, 0, 255))
 
     cv2.imshow('frame', frame)
-    cv2.imshow('canny', edges)
+    cv2.imshow('threshold', threshold)
+    cv2.imshow('simplified contours', thresh_copy)
 
     k = cv2.waitKey(30) & 0xff
     if k == 27:
