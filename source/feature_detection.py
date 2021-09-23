@@ -3,11 +3,9 @@ import cv2
 
 cap = cv2.VideoCapture('../assets/WIN_20210918_10_58_50_Pro.mp4')
 img = cv2.imread('../assets/whitepixeltest.PNG')
-background_subtraction = cv2.createBackgroundSubtractorKNN()
 
-while 1:
-    ret, frame = cap.read()
 
+def process_image(frame):
     grayscale_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     threshold = cv2.threshold(src=grayscale_image, thresh=100, maxval=255, type=cv2.THRESH_BINARY_INV)[1]
@@ -27,15 +25,26 @@ while 1:
         e = 0.005 * perimeter  # The bigger the fraction, the more sides are chopped off the original polygon
         contour = cv2.approxPolyDP(contour, epsilon=e, closed=True)
         cv2.drawContours(thresh_copy, [contour], contourIdx=-1, color=(0, 255, 0), thickness=2)
-        cv2.fillPoly(thresh_copy, [contour], (0, 0, 255))
+        cv2.fillPoly(thresh_copy, [contour], (255, 0, 0))
 
-    cv2.imshow('frame', frame)
-    cv2.imshow('threshold', threshold)
-    cv2.imshow('simplified contours', thresh_copy)
+    return thresh_copy
 
-    k = cv2.waitKey(30) & 0xff
-    if k == 27:
-        break
 
-cap.release()
-cv2.destroyAllWindows()
+def main():
+    while 1:
+        ret, frame = cap.read()
+
+        thresh_copy = process_image(frame)
+
+        cv2.imshow('frame', frame)
+        cv2.imshow('simplified contours', thresh_copy)
+
+        k = cv2.waitKey(30) & 0xff
+        if k == 27:
+            break
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    main()
