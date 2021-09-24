@@ -52,10 +52,12 @@ def preprocess(image):
 def calc_delta_avg():
     x = 0
     y = 0
+    # Sum coordinates history
     for i in range(len(coords_history)):
         if i > 1 and coords_history[i - 1][0] != 0 and coords_history[i - 1][1] != 0:
             x += (coords_history[i][0] - coords_history[i - 1][0]) / coords_history[i - 1][0]
             y += (coords_history[i][1] - coords_history[i - 1][1]) / coords_history[i - 1][1]
+    # Calculate Euclidean distance for acceleration
     mean = np.sqrt(pow(x/30, 2) + pow(y/30, 2))
 
     accel_history.rotate(1)
@@ -68,20 +70,22 @@ def detect_movement():
     t = 0
     for i in accel_history:
         t += i
+    # Calculate the average acceleration and compare to threshold
     return t / len(accel_history) < 0.004
 
 
-def kMeans(image):
+# Perform the main image processing and analysis tasks
+def process_frame(image):
     global freeze_frame, frozen
-    # convert to np.float32
+    # Do data preprocessing
     c, Z2 = preprocess(image)
 
     if Z2 is not None:
-        # define criteria and apply kMeans()
+        # Perform the kMeans cluster analysis
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
         ret2, label, center = cv2.kmeans(Z2, 1, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
-        # Calculate average speed per n frames
+        # Calculate average speed over frames
         coords_history.rotate(1)
         coords_history[0] = center[0]
         speed = calc_delta_avg()
@@ -126,7 +130,7 @@ while running:
 
     # Perform image processing
     if not frozen:
-        ol = kMeans(img2)
+        ol = process_frame(img2)
         do_frame_analysis()
     else:
         ol = freeze_frame
