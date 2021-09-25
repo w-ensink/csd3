@@ -3,6 +3,7 @@ import numpy as np
 import unittest
 import sys
 import yaml
+from utility import Frame, TransformInfo
 
 
 def get_top_left(points: [(int, int)]) -> (int, int):
@@ -49,10 +50,13 @@ def get_source_transform_points(file_path: str):
         return np.float32(points)
 
 
-def transform_frame(frame: np.ndarray, transform_points: [(int, int)], target_width: int, target_height: int):
-    dst = np.float32([[0, 0], [target_width, 0], [0, target_height], [target_width, target_height]])
-    matrix = cv2.getPerspectiveTransform(transform_points, dst)
-    return cv2.warpPerspective(frame, matrix, (target_width, target_height))
+def transform_frame(frame: Frame, transform_info: TransformInfo) -> Frame:
+    dst = np.float32([[0, 0],
+                      [transform_info.target_width, 0],
+                      [0, transform_info.target_height],
+                      [transform_info.target_width, transform_info.target_height]])
+    matrix = cv2.getPerspectiveTransform(transform_info.display_points, dst)
+    return cv2.warpPerspective(frame, matrix, (transform_info.target_width, transform_info.target_height))
 
 
 def parse_config(file_path: str):
@@ -66,10 +70,11 @@ def main():
     transform_points = get_source_transform_points(config['transform_data'])
     width = config['width']
     height = config['height']
+    transform_info = TransformInfo(transform_points, width, height)
 
     while cap.isOpened():
         ret, frame = cap.read()
-        frame = transform_frame(frame, transform_points, width, height)
+        frame = transform_frame(frame, transform_info)
         cv2.imshow('frame', frame)
 
         if user_pressed_esc():
