@@ -11,5 +11,7 @@ def setup(ip_address: str, port: int):
 
 def send_features(features: Features):
     assert client is not None
+    if len(features.center_points) == 0:
+        return
     client.send_message('/center/x', features.center_points[0][0])
     client.send_message('/center/y', features.center_points[0][1])
