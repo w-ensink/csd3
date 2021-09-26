@@ -9,65 +9,77 @@ img = cv2.imread('../assets/whitepixeltest.PNG')
 
 def get_contours(frame: Frame):
     grayscale_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
     threshold = cv2.threshold(src=grayscale_image, thresh=100, maxval=255, type=cv2.THRESH_BINARY_INV)[1]
     kernel = np.ones(shape=(5, 5), dtype=np.uint8)
     threshold = cv2.morphologyEx(src=threshold, op=cv2.MORPH_CLOSE, kernel=kernel)
+
     contours = cv2.findContours(image=threshold, mode=cv2.RETR_CCOMP, method=cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
     return contours
 
 
-def get_center_points(contours):
-    return "peop"
+def get_center_points(frame: Frame):
+    center_point_x = process_frame(frame).center_points[0]
+    print("x = ", center_point_x)
+
+    center_point_y = process_frame(frame).center_points[1]
+    print("y = ", center_point_y)
+
+    return center_point_x, center_point_y
 
 
-def process_image(frame: Frame) -> Features:
+# TODO: get center point detection working
+def detect_features(frame: Frame) -> Features:
     contours = get_contours(frame)
-    center_points = get_center_points(contours)
-    return Features(center_points, contours)
+    # center_points = get_center_points(frame)
+    return Features([], contours)
 
-#----------- TODO: hieronder moet weg uit deze functie
-    thresh_copy = cv2.cvtColor(threshold, cv2.COLOR_GRAY2RGB)
 
+def draw_contour_coordinates_text(frame: Frame, contour: np.ndarray) -> Frame:
+    n = contour.ravel()
+    i = 0
+
+    for _ in n:
+        if i % 2 == 0:
+            x = n[i]
+            y = n[i + 1]
+            text_color = (0, 255, 0)
+
+            if i == 0:
+                # text on topmost co-ordinate.
+                cv2.putText(frame, "Arrow tip", (x, y), 0, 0.5, text_color)
+            else:
+                # text on remaining co-ordinates.
+                cv2.putText(frame, f'{x} {y}', (x, y), 0, 0.5, text_color)
+        i = i + 1
+    return frame
+
+
+def render_image(frame: Frame, features: Features) -> Frame:
     # polygon
-    for contour in contours:
+    for contour in features.contours:
         perimeter = cv2.arcLength(contour, True)
         e = 0.005 * perimeter
         contour = cv2.approxPolyDP(contour, epsilon=e, closed=True)
-        cv2.drawContours(thresh_copy, [contour], contourIdx=-1, color=(0, 255, 0), thickness=2)
-        cv2.fillPoly(thresh_copy, [contour], (255, 0, 0))
+        cv2.drawContours(frame, [contour], contourIdx=-1, color=(0, 255, 0), thickness=2)
+        cv2.fillPoly(frame, [contour], (255, 0, 0))
 
-        # [[1,2], [2,3]]
-        # [1,2,2,3]
-        n = contour.ravel()
-        i = 0
+    # print(features.contours)
 
-        for _ in n:
-            if i % 2 == 0:
-                x = n[i]
-                y = n[i + 1]
-                text_color = (0, 255, 0)
-
-                if i == 0:
-                    # text on topmost co-ordinate.
-                    cv2.putText(thresh_copy, "Arrow tip", (x, y), 0, 0.5, text_color)
-                else:
-                    # text on remaining co-ordinates.
-                    cv2.putText(thresh_copy, f'{x} {y}', (x, y), 0, 0.5, text_color)
-            i = i + 1
-
-    return Features(center_points=[(x, y)], contours=[])
+    return frame
 
 
 def main():
-    while 1:
+    while True:
         ret, frame = cap.read()
 
-        thresh_copy = process_image(frame)
+        features = detect_features(frame)
+        frame = render_image(frame, features)
 
         cv2.imshow('frame', frame)
-        cv2.imshow('simplified contours', thresh_copy)
 
         k = cv2.waitKey(30) & 0xff
         if k == 27:

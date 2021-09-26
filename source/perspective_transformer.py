@@ -3,7 +3,7 @@ import numpy as np
 import unittest
 import sys
 import yaml
-from utility import Frame, TransformInfo
+from utility import Frame, TransformInfo, parse_config
 
 
 def get_top_left(points: [(int, int)]) -> (int, int):
@@ -57,11 +57,6 @@ def transform_frame(frame: Frame, transform_info: TransformInfo) -> Frame:
                       [transform_info.target_width, transform_info.target_height]])
     matrix = cv2.getPerspectiveTransform(transform_info.display_points, dst)
     return cv2.warpPerspective(frame, matrix, (transform_info.target_width, transform_info.target_height))
-
-
-def parse_config(file_path: str):
-    with open(file_path, 'r') as file:
-        return yaml.full_load(file)
 
 
 def main():
