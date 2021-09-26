@@ -15,5 +15,5 @@ def send_features(features: Features):
         return
     contour = features.contours[0][0][0]
     print(f'x: {contour[0]}, y: {contour[1]}')
-    client.send_message('/center/x', float(contour[0]))
-    client.send_message('/center/y', float(contour[1]))
+    client.send_message('/user/1/value', float(contour[0]))
+    client.send_message('/user/2/value', float(contour[1]))
