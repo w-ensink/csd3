@@ -4,3 +4,5 @@ height: 1200
 transform_data: transform-points.txt
 osc_ip_address: 127.0.0.1
 osc_port: 5000
+enable_recording: true
+recording_file: osc_recording.txt
