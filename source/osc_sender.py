@@ -21,5 +21,5 @@ def send_features(features: Features):
 
     # client.send_message('/user/1/value', float(contour[0]) * scaling_width)
     # client.send_message('/user/2/value', float(contour[1]) * scaling_height)
-    client.send_message('/user/1/value', float(features.center_points[0] * scaling_width))
-    client.send_message('/user/1/value', float(features.center_points[1] * scaling_height))
+    client.send_message('/user/1/value', float(features.center_points[0][0] * scaling_width))
+    client.send_message('/user/1/value', float(features.center_points[0][1] * scaling_height))
