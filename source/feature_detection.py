@@ -1,10 +1,25 @@
 import numpy as np
 import cv2
-from object_detection_kmeans import process_frame
+# from object_detection_kmeans import process_frame
 from utility import Frame, Features
 
-cap = cv2.VideoCapture('../assets/WIN_20210918_10_58_50_Pro.mp4')
+cap = cv2.VideoCapture(0)
+vid = cv2.VideoCapture('../assets/WIN_20210918_10_58_50_Pro.mp4')
 img = cv2.imread('../assets/whitepixeltest.PNG')
+
+
+def fill_frame(frame: Frame):
+    frame_width = len(frame[0])
+    frame_height = len(frame)
+
+    left_upper = [0, 0]
+    right_upper = [frame_width, 0]
+    left_lower = [0, frame_height]
+    right_lower = [frame_width, frame_height]
+
+    frame_square = np.array([[left_upper, right_upper, right_lower, left_lower]], dtype=np.int32)
+
+    cv2.fillPoly(frame, frame_square, (255, 255, 255))
 
 
 def get_contours(frame: Frame):
@@ -60,14 +75,16 @@ def draw_contour_coordinates_text(frame: Frame, contour: np.ndarray) -> Frame:
 
 def render_image(frame: Frame, features: Features) -> Frame:
     # polygon
-    for contour in features.contours:
-        perimeter = cv2.arcLength(contour, True)
-        e = 0.005 * perimeter
-        contour = cv2.approxPolyDP(contour, epsilon=e, closed=True)
-        cv2.drawContours(frame, [contour], contourIdx=-1, color=(0, 255, 0), thickness=2)
-        cv2.fillPoly(frame, [contour], (255, 0, 0))
+    fill_frame(frame)
 
-    # print(features.contours)
+    for contour in features.contours:
+        if cv2.contourArea(contour) > 4000:
+            perimeter = cv2.arcLength(contour, True)
+            e = 0.005 * perimeter
+            contour = cv2.approxPolyDP(contour, epsilon=e, closed=True)
+
+            cv2.drawContours(frame, [contour], contourIdx=-1, color=(0, 255, 0), thickness=2)
+            cv2.fillPoly(frame, [contour], (0, 0, 0))
 
     return frame
 
