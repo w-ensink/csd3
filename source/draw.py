@@ -21,3 +21,7 @@ def centers(arr, bg, dim, spd, freeze):
     overlay = np.array(overlay)[:, :, ::-1].copy()
     overlay = cv2.cvtColor(overlay, cv2.COLOR_BGRA2RGBA)
     return cv2.addWeighted(bg, 0.7, overlay, 0.3, 0)
+
+
+def generate_square(center, radius=5):
+    return [(int(center[0][0] - radius), int(center[0][1] - radius)), (int(center[0][0] + radius), int(center[0][1] + radius))]

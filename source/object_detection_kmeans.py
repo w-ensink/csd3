@@ -35,6 +35,16 @@ def init_history():
 init_history()
 
 
+def bg_subtract(image):
+    img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    img = cv2.resize(img, (w, h))
+
+    # Run masking process
+    kernel = np.ones((5, 5), np.uint8)
+    foreground_mask = background_subtraction.apply(img)
+    return cv2.morphologyEx(foreground_mask, cv2.MORPH_CLOSE, kernel)
+
+
 # Prepare incoming frames for analysis
 def preprocess(image):
     c = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
@@ -75,10 +85,14 @@ def detect_movement():
 
 
 # Perform the main image processing and analysis tasks
-def process_frame(image):
+def process_frame(image, returnval="image"):
     global freeze_frame, frozen
     # Do data preprocessing
-    c, Z2 = preprocess(image)
+    img = bg_subtract(image)
+    c, Z2 = preprocess(img)
+
+    rtn = image
+    center = []
 
     if Z2 is not None:
         # Perform the kMeans cluster analysis
@@ -92,41 +106,24 @@ def process_frame(image):
 
         # Detect movement based on calculated speed
         freeze = detect_movement()
+        if returnval == "image":
+            rtn = draw.centers(center, c, (w, h), speed, freeze)
+
         if freeze:
-            freeze_frame = draw.centers(center, c, (w, h), speed, freeze)
+            freeze_frame = rtn
             frozen = True
-            return freeze_frame
 
-        return draw.centers(center, c, (w, h), speed, freeze)
-    else:
-        return image
-
-
-# Paul's code
-def do_frame_analysis():
-    # moving object
-    white_pixels = cv2.countNonZero(img)
-    print("white pixels: ", white_pixels)
-
-    # background
-    black_pixels = np.sum(img == 0)
-    print("black pixels: ", black_pixels)
-
-    percentage_white_pixels = (white_pixels / black_pixels) * 100
-    print("percentage of white pixels: ", percentage_white_pixels, "\n")
+    if returnval == "image":
+        return rtn
+    elif returnval == "points":
+        return center
 
 
 # Main program loop
-while running:
+while False:
     # Get and resize
     ret, frame = cap.read()
-    img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    img = cv2.resize(img, (w, h))
-
-    # Run masking process
-    kernel = np.ones((5, 5), np.uint8)
-    foreground_mask = background_subtraction.apply(img)
-    img2 = cv2.morphologyEx(foreground_mask, cv2.MORPH_CLOSE, kernel)
+    img2 = bg_subtract(frame)
 
     # Perform image processing
     if not frozen:

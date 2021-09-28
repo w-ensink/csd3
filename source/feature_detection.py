@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from object_detection_kmeans import process_frame
 from utility import Frame, Features
+import draw
 
 cap = cv2.VideoCapture('../assets/WIN_20210918_10_58_50_Pro.mp4')
 img = cv2.imread('../assets/whitepixeltest.PNG')
@@ -21,21 +22,15 @@ def get_contours(frame: Frame):
     return contours
 
 
-def get_center_points(frame: Frame):
-    center_point_x = process_frame(frame).center_points[0]
-    print("x = ", center_point_x)
-
-    center_point_y = process_frame(frame).center_points[1]
-    print("y = ", center_point_y)
-
-    return center_point_x, center_point_y
+def get_center_points(frame: Frame, contours):
+    return process_frame(frame, "points")
 
 
 # TODO: get center point detection working
 def detect_features(frame: Frame) -> Features:
     contours = get_contours(frame)
-    # center_points = get_center_points(frame)
-    return Features([], contours)
+    center_points = get_center_points(frame, contours)
+    return Features(center_points, contours)
 
 
 def draw_contour_coordinates_text(frame: Frame, contour: np.ndarray) -> Frame:
@@ -68,6 +63,9 @@ def render_image(frame: Frame, features: Features) -> Frame:
         cv2.fillPoly(frame, [contour], (255, 0, 0))
 
     # print(features.contours)
+    # Draw square at center point
+    square = draw.generate_square(features.center_points, 5)
+    cv2.rectangle(frame, pt1=square[0], pt2=square[1], color=(0, 0, 255), thickness=10)
 
     return frame
 
