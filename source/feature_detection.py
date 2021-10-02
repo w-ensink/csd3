@@ -23,7 +23,7 @@ def fill_frame(frame: Frame):
 
 
 def get_contours(frame: Frame):
-    grayscale_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    grayscale_image = cv2.cvtColor(frame, cv2.COLOR_RGBA2GRAY)
 
     threshold = cv2.threshold(src=grayscale_image, thresh=100, maxval=255, type=cv2.THRESH_BINARY_INV)[1]
     kernel = np.ones(shape=(5, 5), dtype=np.uint8)
@@ -75,7 +75,7 @@ def draw_contour_coordinates_text(frame: Frame, contour: np.ndarray) -> Frame:
 
 def render_image(frame: Frame, features: Features) -> Frame:
     # polygon
-    fill_frame(frame)
+    # fill_frame(frame)
 
     for contour in features.contours:
         if cv2.contourArea(contour) > 4000:
