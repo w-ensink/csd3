@@ -3,7 +3,6 @@ import cv2
 # from object_detection_kmeans import process_frame
 from utility import Frame, Features
 
-cap = cv2.VideoCapture(0)
 vid = cv2.VideoCapture('../assets/WIN_20210918_10_58_50_Pro.mp4')
 img = cv2.imread('../assets/whitepixeltest.PNG')
 
@@ -90,10 +89,13 @@ def render_image(frame: Frame, features: Features) -> Frame:
 
 
 def main():
+    cap = cv2.VideoCapture(1)
+
     while True:
         ret, frame = cap.read()
-
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
         features = detect_features(frame)
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGR)
         frame = render_image(frame, features)
 
         cv2.imshow('frame', frame)

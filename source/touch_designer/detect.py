@@ -1,9 +1,11 @@
 
 import feature_detection
+import osc_sender
 from feature_detection import detect_features, render_image
 from osc_sender import OSC_Sender
 import importlib
 import numpy as np
+import cv2
 
 sender = OSC_Sender('127.0.0.1', 5000)
 
@@ -19,13 +21,23 @@ def onPulse(par):
 	return
 
 
+def to_int(frame):
+	return (frame * 255).astype(np.uint8)
+
+def to_float(frame):
+	return (frame / 255).astype(np.float32)
+
 def onCook(scriptOp):
-	importlib.reload(feature_detection)
-	np_arr = op('displace2').numpyArray(delayed=True)
-	print(f'form = {np_arr.astype(np.uint8).shape}')
-
-	features = detect_features(np_arr.astype(np.uint8))
-	print(f'len = {len(features.contours)}')
+	importlib.reload(osc_sender)
+	frame = to_int(op('displace2').numpyArray(delayed=True))
+	features = detect_features(frame)
 	sender.send_features(features)
+	print(f'num contours: {len(features.contours)}')
 
-	scriptOp.copyNumpyArray(np_arr)
+	frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGR)
+
+	frame = render_image(frame, features)
+	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+	#
+
+	scriptOp.copyNumpyArray(to_float(frame))
