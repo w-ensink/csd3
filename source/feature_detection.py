@@ -44,7 +44,7 @@ def get_center_points(contours):
 def detect_features(frame: Frame) -> Features:
     contours = get_contours(frame)
     center_points = get_center_points(contours)
-    return Features(center_points, contours)
+    return Features(center_points, [contours])
 
 
 def draw_contour_coordinates_text(frame: Frame, contour: np.ndarray) -> Frame:
@@ -68,24 +68,26 @@ def draw_contour_coordinates_text(frame: Frame, contour: np.ndarray) -> Frame:
 
 
 def render_image(frame: Frame, features: Features) -> Frame:
-    # polygon
     fill_frame(frame)
 
     for contour in features.contours:
         if cv2.contourArea(contour) > 4000:
             perimeter = cv2.arcLength(contour, True)
-            e = 0.005 * perimeter
+            e = 0.001 * perimeter
             contour = cv2.approxPolyDP(contour, epsilon=e, closed=True)
 
-            cv2.drawContours(frame, [contour], contourIdx=-1, color=(0, 255, 0), thickness=2)
+            cv2.drawContours(frame, [contour], contourIdx=-1, color=(0, 255, 0), thickness=6)
             cv2.fillPoly(frame, [contour], (0, 0, 0))
 
     return frame
 
 
 def main():
+    video = cv2.VideoCapture('../assets/screen_recording.mp4')
+
     while True:
-        ret, frame = cap.read()
+        # ret, frame = cap.read()
+        ret, frame = video.read()
 
         features = detect_features(frame)
         frame = render_image(frame, features)
