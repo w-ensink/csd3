@@ -44,7 +44,7 @@ def get_center_points(contours):
 def detect_features(frame: Frame) -> Features:
     contours = get_contours(frame)
     center_points = get_center_points(contours)
-    return Features(center_points, [contours])
+    return Features([center_points], contours)
 
 
 def draw_contour_coordinates_text(frame: Frame, contour: np.ndarray) -> Frame:
