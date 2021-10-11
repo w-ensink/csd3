@@ -1,18 +1,20 @@
 import numpy as np
 import cv2
 from collections import deque
-import draw
-
-# feature detection
-# - background subtraction
-# - background = black, moving object = white
-# - count black & white pixels to set percentage
-
-# cap = cv2.VideoCapture(2)
 from numpy.random import random
 
+from scipy.spatial import distance
+from scipy.cluster.vq import vq, kmeans, whiten
+
+if __name__ == "__main__":
+    import draw
+
 background_subtraction = cv2.createBackgroundSubtractorKNN()
-cap = cv2.VideoCapture(2)
+
+NUMBER_OF_CLUSTERS = 4
+DISTANCE_THRESHOLD = 20
+old_centers = []
+old_mean = (0, 0)
 
 running = True
 w = 1366
@@ -30,18 +32,22 @@ def init_history():
         coords_history.append((round(random() * 100), round(random() * 100)))
     for _ in range(10):
         accel_history.append(random())
+    # for _ in range(NUMBER_OF_CLUSTERS):
+    #     old_centers.append((round(random() * 100), round(random() * 100)))
 
 
 init_history()
 
 
 # Prepare incoming frames for analysis
-def preprocess(image):
-    c = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
-    Z2 = cv2.findNonZero(image)
+def preprocess(image, is_arr=False):
+    c = None
+    if not is_arr:
+        c = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
+        image = cv2.findNonZero(image)
 
-    if Z2 is not None:
-        Z2 = np.squeeze(Z2, axis=1)
+    if image is not None:
+        Z2 = np.squeeze(image, axis=1)
         Z2 = Z2.reshape((-1, 2))
         return c, np.float32(Z2)
     else:
@@ -75,7 +81,7 @@ def detect_movement():
 
 
 # Perform the main image processing and analysis tasks
-def process_frame(image):
+def process_frame(image, do_draw=False):
     global freeze_frame, frozen
     # Do data preprocessing
     c, Z2 = preprocess(image)
@@ -93,59 +99,99 @@ def process_frame(image):
         # Detect movement based on calculated speed
         freeze = detect_movement()
         if freeze:
-            freeze_frame = draw.centers(center, c, (w, h), speed, freeze)
+            freeze_frame = c
             frozen = True
             return freeze_frame
 
-        return draw.centers(center, c, (w, h), speed, freeze)
+        if do_draw:
+            return draw.centers(center, c, (w, h), speed, freeze)
+        return center
     else:
-        return image
+        if do_draw:
+            return image
+        return []
 
 
-# Paul's code
-def do_frame_analysis():
-    # moving object
-    white_pixels = cv2.countNonZero(img)
-    print("white pixels: ", white_pixels)
+# TODO: THIS!!
+def process_contours(contours):
+    global old_mean
 
-    # background
-    black_pixels = np.sum(img == 0)
-    print("black pixels: ", black_pixels)
+    rtn, arr = [], []
+    arranged = sorted(contours, key=cv2.contourArea, reverse=True)
 
-    percentage_white_pixels = (white_pixels / black_pixels) * 100
-    print("percentage of white pixels: ", percentage_white_pixels, "\n")
+    total_x = 0
+    total_y = 0
+
+    for o in arranged[:NUMBER_OF_CLUSTERS]:
+        _, o = preprocess(o, True)
+        o = kmeans(o, 1)[0].flatten()
+        rtn.append(o)
+        total_x += o[0]
+        total_y += o[1]
+
+    # Apply smoothing
+    mean = (total_x / len(rtn), total_y / len(rtn))
+    avg_mean = ((mean[0] + old_mean[0]) / 2., (mean[1] + old_mean[1]) / 2.)
+    old_mean = avg_mean
+
+    return avg_mean
+
+    # If no centers within N distance, point disappeared
+    # for t in rtn:
+    #     d = []
+    #     for s in old_centers:
+    #         # Find Euclidean distance between every new center and the centers from the previous frame
+    #         z = distance.euclidean(t, s)
+    #         d.append(z)
+    #     # Sort the distances, look at the shortest
+    #     d = sorted(d)
+    #     if len(d) > 0 and d[0] < DISTANCE_THRESHOLD:
+    #         # If the shortest is within the threshold, it returns
+    #         arr.append(t)
+    #
+    # if 0 < len(arr) < len(rtn):
+    #     for i in range(NUMBER_OF_CLUSTERS - len(arr)):
+    #         f = rtn[NUMBER_OF_CLUSTERS + i]
+    #         arr.append(f)
+    #
+    # old_centers = arr
+    # return arr
 
 
-# Main program loop
-while running:
-    # Get and resize
-    ret, frame = cap.read()
-    img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    img = cv2.resize(img, (w, h))
+if __name__ == "__main__":
+    cap = cv2.VideoCapture(2)
 
-    # Run masking process
-    kernel = np.ones((5, 5), np.uint8)
-    foreground_mask = background_subtraction.apply(img)
-    img2 = cv2.morphologyEx(foreground_mask, cv2.MORPH_CLOSE, kernel)
+    # Main program loop
+    while running:
+        # Get and resize
+        ret, frame = cap.read()
+        img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        img = cv2.resize(img, (w, h))
 
-    # Perform image processing
-    if not frozen:
-        ol = process_frame(img2)
-        do_frame_analysis()
-    else:
-        ol = freeze_frame
-    # ============================
+        # Run masking process
+        kernel = np.ones((5, 5), np.uint8)
+        foreground_mask = background_subtraction.apply(img)
+        img2 = cv2.morphologyEx(foreground_mask, cv2.MORPH_CLOSE, kernel)
 
-    # Display the window
-    cv2.imshow('detect', ol)
+        # Perform image processing
+        if not frozen:
+            ol = process_frame(img2, True)
+            # print(ol)
+            # do_frame_analysis()
+        else:
+            ol = freeze_frame
+        # ============================
 
-    # Handle keyboard input
-    k = cv2.waitKey(30) & 0xff
-    if type == "image" or k == 27:
-        running = False
-    elif k == 32:
-        frozen = False
-        init_history()
+        # Display the window
+        cv2.imshow('detect', ol)
 
-cap.release()
-cv2.destroyAllWindows()
+        # Handle keyboard input
+        k = cv2.waitKey(30) & 0xff
+        if type == "image" or k == 27:
+            running = False
+        elif k == 32:
+            frozen = False
+            init_history()
+
+    cap.release()
+    cv2.destroyAllWindows()

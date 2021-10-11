@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-# from object_detection_kmeans import process_frame
+from object_detection_kmeans import process_contours
 from utility import Frame, Features
 
 cap = cv2.VideoCapture(0)
@@ -36,21 +36,15 @@ def get_contours(frame: Frame):
     return contours
 
 
-def get_center_points(frame: Frame):
-    center_point_x = process_frame(frame).center_points[0]
-    print("x = ", center_point_x)
-
-    center_point_y = process_frame(frame).center_points[1]
-    print("y = ", center_point_y)
-
-    return center_point_x, center_point_y
+def get_center_points(contours):
+    return process_contours(contours)
 
 
 # TODO: get center point detection working
 def detect_features(frame: Frame) -> Features:
     contours = get_contours(frame)
-    # center_points = get_center_points(frame)
-    return Features([], contours)
+    center_points = get_center_points(contours)
+    return Features(center_points, contours)
 
 
 def draw_contour_coordinates_text(frame: Frame, contour: np.ndarray) -> Frame:
