@@ -3,6 +3,8 @@ import numpy as np
 import unittest
 import sys
 import yaml
+
+from source.setup import get_frame_dimensions
 from utility import Frame, TransformInfo, parse_config
 
 
@@ -45,7 +47,7 @@ def get_source_transform_points(file_path: str):
         for _ in range(4):
             line = f.readline()
             x, y = line.split(',')
-            points.append([int(x), int(y)])
+            points.append([x, y])
         points = sort_points(points)
         return np.float32(points)
 
@@ -55,7 +57,9 @@ def transform_frame(frame: Frame, transform_info: TransformInfo) -> Frame:
                       [transform_info.target_width, 0],
                       [0, transform_info.target_height],
                       [transform_info.target_width, transform_info.target_height]])
-    matrix = cv2.getPerspectiveTransform(transform_info.display_points, dst)
+    dimensions = get_frame_dimensions(frame)
+    display_points = np.float32(list([int(x * dimensions[0]), int(y * dimensions[1])] for x, y in transform_info.display_points))
+    matrix = cv2.getPerspectiveTransform(display_points, dst)
     return cv2.warpPerspective(frame, matrix, (transform_info.target_width, transform_info.target_height))
 
 
