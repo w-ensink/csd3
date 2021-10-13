@@ -38,7 +38,5 @@ def onCook(scriptOp):
 	frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGR)
 
 	frame = render_image(frame, features)
-	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
-	#
 
 	scriptOp.copyNumpyArray(to_float(original_frame))
