@@ -1,10 +1,10 @@
 import numpy as np
 import cv2
-from object_detection_kmeans import process_contours
+from object_detection_kmeans import process_contours, process_frame
 from perspective_transformer import get_frame_dimensions
 from utility import Frame, Features
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 vid = cv2.VideoCapture('../assets/WIN_20210918_10_58_50_Pro.mp4')
 img = cv2.imread('../assets/whitepixeltest.PNG')
 
@@ -87,19 +87,32 @@ def render_image(frame: Frame, features: Features) -> Frame:
             cv2.drawContours(frame, [contour], contourIdx=-1, color=(0, 255, 0), thickness=6)
             cv2.fillPoly(frame, [contour], (0, 0, 0))
 
+    cp = features.center_points[0]
+    cv2.circle(frame, (int(cp[0]), int(cp[1])), 5, (0, 0, 255), 5)
+
     return frame
 
 
+def get_center_point_bw(frame):
+    cp = process_frame(frame)[0]
+    return int(cp[0]), int(cp[1])
+
+
+# get contours -> draw bw contours -> bw detect & centre point detect
 def main():
     video = cv2.VideoCapture('../assets/screen_recording.mp4')
 
     while True:
-        # ret, frame = cap.read()
         ret, frame = video.read()
 
         features = detect_features(frame)
-        print(f'bw ratio: {features.black_white_ratio}')
+        print(f'bw ratio: {features.black_white_ratio}, center: {features.center_points[0]}')
         frame = render_image(frame, features)
+
+        bw_frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2GRAY)
+        cp = get_center_point_bw(bw_frame)
+        print(f'center point: {cp}')
+        frame = cv2.circle(frame, cp, 10, (255, 0, 0), 5)
 
         cv2.imshow('frame', frame)
 

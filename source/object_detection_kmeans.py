@@ -43,6 +43,7 @@ def preprocess(image, is_arr=False):
     c = None
     if not is_arr:
         c = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
+        image = (255 - image)
         image = cv2.findNonZero(image)
 
     if image is not None:
@@ -80,8 +81,7 @@ def detect_movement():
 
 
 # Perform the main image processing and analysis tasks
-def process_frame(image, do_draw=False):
-    global freeze_frame, frozen
+def process_frame(image):
     # Do data preprocessing
     c, Z2 = preprocess(image)
 
@@ -93,21 +93,10 @@ def process_frame(image, do_draw=False):
         # Calculate average speed over frames
         coords_history.rotate(1)
         coords_history[0] = center[0]
-        speed = calc_delta_avg()
+        # speed = calc_delta_avg()
 
-        # Detect movement based on calculated speed
-        freeze = detect_movement()
-        if freeze:
-            freeze_frame = c
-            frozen = True
-            return freeze_frame
-
-        if do_draw:
-            return draw.centers(center, c, (w, h), speed, freeze)
         return center
     else:
-        if do_draw:
-            return image
         return []
 
 
