@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from object_detection_kmeans import process_contours
+from perspective_transformer import get_frame_dimensions
 from utility import Frame, Features
 
 cap = cv2.VideoCapture(0)
@@ -40,11 +41,18 @@ def get_center_points(contours):
     return process_contours(contours)
 
 
+def get_black_white_ratio(frame):
+    bw_frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2GRAY)
+    frame_dimensions = get_frame_dimensions(bw_frame)
+    return len(cv2.findNonZero(bw_frame)) / ((frame_dimensions[0] * frame_dimensions[1]) + 0.0001)
+
+
 # TODO: get center point detection working
 def detect_features(frame: Frame) -> Features:
+    black_white_ratio = get_black_white_ratio(frame)
     contours = get_contours(frame)
     center_points = get_center_points(contours)
-    return Features([center_points], contours)
+    return Features([center_points], contours, black_white_ratio)
 
 
 def draw_contour_coordinates_text(frame: Frame, contour: np.ndarray) -> Frame:
@@ -90,6 +98,7 @@ def main():
         ret, frame = video.read()
 
         features = detect_features(frame)
+        print(f'bw ratio: {features.black_white_ratio}')
         frame = render_image(frame, features)
 
         cv2.imshow('frame', frame)

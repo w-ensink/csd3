@@ -4,7 +4,7 @@ import unittest
 import sys
 import yaml
 
-from source.setup import get_frame_dimensions
+from global_setup import get_frame_dimensions
 from utility import Frame, TransformInfo, parse_config
 
 

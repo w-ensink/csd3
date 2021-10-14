@@ -28,8 +28,9 @@ def to_float(frame):
 	return (frame / 255).astype(np.float32)
 
 def onCook(scriptOp):
-	importlib.reload(osc_sender)
+	#importlib.reload(osc_sender)
 	frame = to_int(op('out2').numpyArray(delayed=False))
+	original_frame = np.copy(frame)
 	features = detect_features(frame)
 	sender.send_features(features)
 	print(f'num contours: {len(features.contours)}')
@@ -37,7 +38,5 @@ def onCook(scriptOp):
 	frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGR)
 
 	frame = render_image(frame, features)
-	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
-	#
 
-	scriptOp.copyNumpyArray(to_float(frame))
+	scriptOp.copyNumpyArray(to_float(original_frame))
