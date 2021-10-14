@@ -3,8 +3,7 @@ import cv2
 from collections import deque
 from numpy.random import random
 
-from scipy.spatial import distance
-from scipy.cluster.vq import vq, kmeans, whiten
+from scipy.cluster.vq import kmeans
 
 if __name__ == "__main__":
     import draw
@@ -112,7 +111,6 @@ def process_frame(image, do_draw=False):
         return []
 
 
-# TODO: THIS!!
 def process_contours(contours):
     global old_mean
 
@@ -135,27 +133,6 @@ def process_contours(contours):
     old_mean = avg_mean
 
     return avg_mean
-
-    # If no centers within N distance, point disappeared
-    # for t in rtn:
-    #     d = []
-    #     for s in old_centers:
-    #         # Find Euclidean distance between every new center and the centers from the previous frame
-    #         z = distance.euclidean(t, s)
-    #         d.append(z)
-    #     # Sort the distances, look at the shortest
-    #     d = sorted(d)
-    #     if len(d) > 0 and d[0] < DISTANCE_THRESHOLD:
-    #         # If the shortest is within the threshold, it returns
-    #         arr.append(t)
-    #
-    # if 0 < len(arr) < len(rtn):
-    #     for i in range(NUMBER_OF_CLUSTERS - len(arr)):
-    #         f = rtn[NUMBER_OF_CLUSTERS + i]
-    #         arr.append(f)
-    #
-    # old_centers = arr
-    # return arr
 
 
 if __name__ == "__main__":
