@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from object_detection_kmeans import process_contours, preprocess
+from object_detection_kmeans import process_contours
 from perspective_transformer import get_frame_dimensions
 from utility import Frame, Features
 
@@ -44,7 +44,7 @@ def get_center_points(contours):
 def get_black_white_ratio(frame):
     bw_frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2GRAY)
     frame_dimensions = get_frame_dimensions(bw_frame)
-    return len(cv2.findNonZero(bw_frame)) / (frame_dimensions[0] * frame_dimensions[1])
+    return len(cv2.findNonZero(bw_frame)) / ((frame_dimensions[0] * frame_dimensions[1]) + 0.0001)
 
 
 # TODO: get center point detection working

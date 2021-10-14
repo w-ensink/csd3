@@ -130,7 +130,7 @@ def process_contours(contours):
         total_y += o[1]
 
     # Apply smoothing
-    mean = (total_x / len(rtn), total_y / len(rtn))
+    mean = (total_x / (len(rtn) + 0.0001), total_y / (len(rtn) + 0.0001))
     avg_mean = ((mean[0] + old_mean[0]) / 2., (mean[1] + old_mean[1]) / 2.)
     old_mean = avg_mean
 

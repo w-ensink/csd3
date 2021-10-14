@@ -28,7 +28,7 @@ def to_float(frame):
 	return (frame / 255).astype(np.float32)
 
 def onCook(scriptOp):
-	importlib.reload(osc_sender)
+	#importlib.reload(osc_sender)
 	frame = to_int(op('out2').numpyArray(delayed=False))
 	original_frame = np.copy(frame)
 	features = detect_features(frame)
