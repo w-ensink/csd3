@@ -109,7 +109,8 @@ def render_image(frame: Frame, features: Features) -> Frame:
 
 def get_center_point_bw(frame):
     cp = process_frame(frame)[0]
-    return int(cp[0]), int(cp[1])
+    dims = get_frame_dimensions(frame)
+    return (cp[0] / dims[0]) * 16384, (cp[1] / dims[1]) * 16384
 
 
 # get contours -> draw bw contours -> bw detect & centre point detect
