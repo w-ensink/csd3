@@ -44,15 +44,29 @@ def get_center_points(contours):
 def get_black_white_ratio(frame):
     bw_frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2GRAY)
     frame_dimensions = get_frame_dimensions(bw_frame)
-    return len(cv2.findNonZero(bw_frame)) / ((frame_dimensions[0] * frame_dimensions[1]) + 0.0001)
+    non_zeros = cv2.findNonZero(bw_frame)
+    if non_zeros is None:
+        return 0.0
+    return len(non_zeros) / ((frame_dimensions[0] * frame_dimensions[1]) + 0.0001)
 
 
 # TODO: get center point detection working
 def detect_features(frame: Frame) -> Features:
-    black_white_ratio = get_black_white_ratio(frame)
     contours = get_contours(frame)
-    center_points = get_center_points(contours)
-    return Features([center_points], contours, black_white_ratio)
+    fill_frame(frame)
+    for contour in contours:
+        if cv2.contourArea(contour) > 4000:
+            perimeter = cv2.arcLength(contour, True)
+            e = 0.001 * perimeter
+            contour = cv2.approxPolyDP(contour, epsilon=e, closed=True)
+
+            cv2.drawContours(frame, [contour], contourIdx=-1, color=(0, 255, 0), thickness=6)
+            cv2.fillPoly(frame, [contour], (0, 0, 0))
+
+    black_white_ratio = get_black_white_ratio(frame)
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2GRAY)
+    center_point = get_center_point_bw(frame)
+    return Features([center_point], contours, black_white_ratio)
 
 
 def draw_contour_coordinates_text(frame: Frame, contour: np.ndarray) -> Frame:
@@ -103,16 +117,16 @@ def main():
     video = cv2.VideoCapture('../assets/screen_recording.mp4')
 
     while True:
-        ret, frame = video.read()
+        ret, frame = cap.read()
 
         features = detect_features(frame)
         print(f'bw ratio: {features.black_white_ratio}, center: {features.center_points[0]}')
         frame = render_image(frame, features)
 
-        bw_frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2GRAY)
-        cp = get_center_point_bw(bw_frame)
-        print(f'center point: {cp}')
-        frame = cv2.circle(frame, cp, 10, (255, 0, 0), 5)
+        # bw_frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2GRAY)
+        # cp = get_center_point_bw(bw_frame)
+        # print(f'center point: {cp}')
+        # frame = cv2.circle(frame, cp, 10, (255, 0, 0), 5)
 
         cv2.imshow('frame', frame)
 
