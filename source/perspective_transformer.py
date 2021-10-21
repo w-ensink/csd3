@@ -1,3 +1,5 @@
+# partly inspired by: https://medium.com/analytics-vidhya/opencv-perspective-transformation-9edffefb2143
+
 import cv2
 import numpy as np
 import unittest

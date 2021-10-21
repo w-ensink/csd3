@@ -1,3 +1,6 @@
+# partly inspired by: https://automaticaddison.com/how-to-draw-contours-around-objects-using-opencv/
+#                and: https://www.programcreek.com/python/example/89328/cv2.approxPolyDP
+
 import numpy as np
 import cv2
 from object_detection_kmeans import process_contours, process_frame
@@ -118,16 +121,11 @@ def main():
     video = cv2.VideoCapture('../assets/screen_recording.mp4')
 
     while True:
-        ret, frame = cap.read()
+        ret, frame = video.read()
 
         features = detect_features(frame)
         print(f'bw ratio: {features.black_white_ratio}, center: {features.center_points[0]}')
         frame = render_image(frame, features)
-
-        # bw_frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2GRAY)
-        # cp = get_center_point_bw(bw_frame)
-        # print(f'center point: {cp}')
-        # frame = cv2.circle(frame, cp, 10, (255, 0, 0), 5)
 
         cv2.imshow('frame', frame)
 

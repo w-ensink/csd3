@@ -31,8 +31,6 @@ def init_history():
         coords_history.append((round(random() * 100), round(random() * 100)))
     for _ in range(10):
         accel_history.append(random())
-    # for _ in range(NUMBER_OF_CLUSTERS):
-    #     old_centers.append((round(random() * 100), round(random() * 100)))
 
 
 init_history()
@@ -93,7 +91,6 @@ def process_frame(image):
         # Calculate average speed over frames
         coords_history.rotate(1)
         coords_history[0] = center[0]
-        # speed = calc_delta_avg()
 
         return center
     else:
@@ -142,8 +139,6 @@ if __name__ == "__main__":
         # Perform image processing
         if not frozen:
             ol = process_frame(img2, True)
-            # print(ol)
-            # do_frame_analysis()
         else:
             ol = freeze_frame
         # ============================

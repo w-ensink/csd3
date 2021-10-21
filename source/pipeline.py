@@ -7,6 +7,7 @@ from utility import TransformInfo, parse_config
 from osc_sender import OSC_Sender
 from osc_recorder import OSC_Recorder
 
+
 def main():
     config = parse_config(sys.argv[1])
     camera = cv2.VideoCapture(config['camera'])
